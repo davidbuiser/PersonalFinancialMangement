@@ -2,23 +2,32 @@ package org.codefactory.team07.personalfinancialmanagement.infrastructure.adapte
 
 import org.codefactory.team07.personalfinancialmanagement.domain.model.Expense;
 import org.codefactory.team07.personalfinancialmanagement.domain.port.out.ExpenseRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
-@Repository
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class ExpenseRepositoryImpl implements ExpenseRepository {
-
     private final JpaExpenseRepository jpaRepository;
-
-    public ExpenseRepositoryImpl(JpaExpenseRepository jpaRepository) {
-        this.jpaRepository = jpaRepository;
-    }
 
     @Override
     public void save(Expense expense) {
         ExpenseEntity entity = new ExpenseEntity(
+            null,
             expense.getDescription(),
-            expense.getAmount()
+            expense.getAmount(),
+            expense.getCategory().name(),
+            expense.getDate()
         );
         jpaRepository.save(entity);
+    }
+
+    @Override
+    public double getTotalSpent() {
+        // Sumamos todos los montos de la tabla
+        return jpaRepository.findAll().stream()
+                .mapToDouble(ExpenseEntity::getAmount)
+                .sum();
     }
 }
