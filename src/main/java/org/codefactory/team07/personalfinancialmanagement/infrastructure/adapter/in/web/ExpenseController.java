@@ -1,6 +1,10 @@
 package org.codefactory.team07.personalfinancialmanagement.infrastructure.adapter.in.web;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+import jakarta.validation.Valid;
 
 import org.codefactory.team07.personalfinancialmanagement.application.usecase.GetExpenseHistoryUseCase;
 import org.codefactory.team07.personalfinancialmanagement.application.usecase.RegisterExpenseUseCase;
@@ -20,31 +24,33 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor // Lombok genera el constructor para inyectar el UseCase
 public class ExpenseController {
     private final RegisterExpenseUseCase useCase;
+    private final GetExpenseHistoryUseCase getHistoryUseCase;
 
     @PostMapping
-    public ResponseEntity<String> register(@RequestBody ExpenseDTO dto) {
-        try {
-            if (dto.getCategory() == null || dto.getCategory().isBlank()) {
-                return ResponseEntity.badRequest().body("Error en los datos: la categoría es obligatoria");
-            }
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody ExpenseDTO dto) {
+        Expense expense = new Expense(
+            dto.getDescription(),
+            dto.getAmount(),
+            Category.valueOf(dto.getCategory().trim().toUpperCase(Locale.ROOT)),
+            dto.getDate()
+        );
+        String resultMessage = useCase.execute(expense);
 
-            Expense expense = new Expense(
-                dto.getDescription(), 
-                dto.getAmount(), 
-                Category.valueOf(dto.getCategory().toUpperCase()), 
-                dto.getDate()
-            );
-            return ResponseEntity.ok(useCase.execute(expense));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error en los datos: " + e.getMessage());
-        }
+        return ResponseEntity.ok(ApiResponse.success(resultMessage, null));
     }
 
-    private final GetExpenseHistoryUseCase getHistoryUseCase; // Inyectar el nuevo caso de uso
-
     @GetMapping
-    public ResponseEntity<List<Expense>> getHistory() {
-        return ResponseEntity.ok(getHistoryUseCase.execute());
+    public ResponseEntity<ApiResponse<List<ExpenseResponseDTO>>> getHistory() {
+        List<ExpenseResponseDTO> expenses = getHistoryUseCase.execute().stream()
+            .map(expense -> new ExpenseResponseDTO(
+                expense.getDescription(),
+                expense.getAmount(),
+                expense.getCategory().name(),
+                expense.getDate()
+            ))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success("Historial obtenido correctamente", expenses));
     }
     
 }
