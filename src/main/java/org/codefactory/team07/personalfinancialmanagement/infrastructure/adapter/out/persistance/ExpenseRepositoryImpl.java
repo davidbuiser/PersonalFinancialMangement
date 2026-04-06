@@ -1,5 +1,9 @@
 package org.codefactory.team07.personalfinancialmanagement.infrastructure.adapter.out.persistance;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.codefactory.team07.personalfinancialmanagement.domain.model.Category;
 import org.codefactory.team07.personalfinancialmanagement.domain.model.Expense;
 import org.codefactory.team07.personalfinancialmanagement.domain.port.out.ExpenseRepository;
 import org.springframework.stereotype.Component;
@@ -30,4 +34,17 @@ public class ExpenseRepositoryImpl implements ExpenseRepository {
                 .mapToDouble(ExpenseEntity::getAmount)
                 .sum();
     }
+
+    @Override
+    public List<Expense> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(entity -> new Expense(
+                    entity.getDescription(),
+                    entity.getAmount(),
+                    Category.valueOf(entity.getCategory()),
+                    entity.getDate()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }
