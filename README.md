@@ -285,7 +285,7 @@ Ejecutar pruebas:
 ## 18. Recomendaciones para produccion
 
 Para pasar a produccion se recomienda:
-- Cambiar H2 en memoria por PostgreSQL persistente
+- Cambiar H2 en memoria por PostgreSQL persistente (pensado para el próximo sprint)
 - Usar perfiles por entorno (dev, test, prod)
 - Mover limite de presupuesto a base de datos o configuracion externa
 - Incorporar autenticacion y autorizacion
